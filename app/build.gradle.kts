@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-}
+    alias(libs.plugins.google.services)}
 
 android {
     namespace = "com.example.collecto"
@@ -54,4 +54,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(platform(libs.firebase.bom)) // ✅ BoM으로 Firebase 버전 관리
+    implementation(libs.firebase.auth)         // ✅ Firebase Authentication
+
 }

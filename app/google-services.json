@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "584587590510",
+    "project_id": "collecto-696f7",
+    "storage_bucket": "collecto-696f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:584587590510:android:d3676f2c228b81c819df7f",
+        "android_client_info": {
+          "package_name": "com.example.collecto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbYgy3f-zLLW6HnET5W4t5ArC0sJ7Hc2c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
