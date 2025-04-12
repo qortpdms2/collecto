@@ -1,99 +1,83 @@
 package com.example.collecto.ui
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.collecto.firebase.AuthManager
+import com.example.collecto.local.UrlManager
+import com.example.collecto.model.Website
 
 @Composable
-fun MainScreen(onLogout: () -> Unit) {
+fun MainScreen(onLogout:() -> Unit) {
+    var inputUrl by remember { mutableStateOf("") }
+    val websites = remember { mutableStateListOf<Website>() }
+    val context = LocalContext.current
+    val urlManager = remember { UrlManager(context) }
+
+    LaunchedEffect(Unit) { websites.addAll(urlManager.loadUrls()) }
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 32.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth().padding(28.dp),
+        verticalArrangement = Arrangement.Top
     ) {
-        // 상단: 환영 메시지
-        Column {
-            Text(
-                text = "Collecto에 오신 걸 환영해요 👋",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp
-                )
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "즐겨찾는 웹사이트를 손쉽게 저장하고 정리해보세요.",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                )
-            )
-        }
+        Text("\uD83D\uDCCC 저장한 웹사이트 목록", style =MaterialTheme.typography.headlineSmall)
 
-        // 중간: 기능 버튼 (예시)
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            MainFeatureButton("웹사이트 추가하기") {
-                // TODO: 웹사이트 추가 화면으로 이동
-            }
+        Spacer(modifier = Modifier.height(16.dp))
 
-            MainFeatureButton("폴더 보기") {
-                // TODO: 폴더 화면으로 이동
-            }
+        OutlinedTextField(
+            value = inputUrl,
+            onValueChange = { inputUrl = it},
+            label = { Text("URL 입력") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
 
-            MainFeatureButton("태그로 찾기") {
-                // TODO: 태그 검색 화면으로 이동
-            }
-        }
-
-        // 하단: 로그아웃 버튼
         Button(
             onClick = {
-                AuthManager.logout()
-                onLogout()
+                if(inputUrl.isNotBlank()){
+                    val newSite = Website(inputUrl)
+                    websites.add(newSite)
+                    urlManager.saveUrls(websites)
+                    inputUrl=""
+                }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer
-            )
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "로그아웃",
-                color = MaterialTheme.colorScheme.onErrorContainer,
-                fontWeight = FontWeight.SemiBold
-            )
+            Text("저장하기")
         }
-    }
-}
 
-@Composable
-fun MainFeatureButton(text: String, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp
-            )
-        )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        LazyColumn {
+            items(websites) {
+                site->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                        .clickable {
+                            val intent = Intent(Intent.ACTION_MAIN, Uri.parse(site.url))
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            context.startActivity(intent)
+                        }
+                ) {
+                    Text(
+                        text = site.url,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
+
+    Spacer(modifier = Modifier.height(24.dp))
+    Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()){ Text("로그아웃") }
     }
 }
