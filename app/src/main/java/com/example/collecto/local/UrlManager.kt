@@ -15,14 +15,25 @@ class UrlManager(context:Context) {
         prefs.edit().putString(key,json).apply()
     }
 
-    fun loadUrls() : List<Website> {
+    fun clearUrls(){
+        prefs.edit().remove(key).apply()
+    }
+
+    fun loadUrls(): List<Website> {
         return try {
             val json = prefs.getString(key, null) ?: return emptyList()
-            val type = object:TypeToken<List<Website>>() {}.type
-            gson.fromJson(json,type) ?: emptyList()
-        } catch (e:Exception) {
+            val type = object : TypeToken<List<Map<String, Any>>>() {}.type
+            val rawList: List<Map<String, Any>> = gson.fromJson(json, type)
+
+            rawList.map {
+                val url = it["url"] as? String ?: ""
+                val folder = it["folder"] as? String ?: "기타"
+                Website(url, folder)
+            }
+        } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
         }
     }
+
 }
