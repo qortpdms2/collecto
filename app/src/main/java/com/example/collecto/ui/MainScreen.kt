@@ -62,17 +62,34 @@ fun MainScreen(onLogout:() -> Unit) {
                 site->
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                        .clickable {
-                            val intent = Intent(Intent.ACTION_MAIN, Uri.parse(site.url))
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            context.startActivity(intent)
-                        }
                 ) {
-                    Text(
-                        text = site.url,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = site.url,
+                            modifier=Modifier
+                            .weight(1f)
+                                .clickable {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(site.url))
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    context.startActivity(intent)
+                                }
+                        )
+                        Text(
+                            text =  "❌",
+                            modifier = Modifier
+                            .padding(start = 8.dp)
+                                .clickable {
+                                    websites.remove(site)
+                                    urlManager.saveUrls(websites)
+                                },
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
                 }
             }
         }

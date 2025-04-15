@@ -16,8 +16,13 @@ class UrlManager(context:Context) {
     }
 
     fun loadUrls() : List<Website> {
-        val json = prefs.getString(key, null) ?: return emptyList()
-        val type = object : TypeToken<Website>() {}.type
-        return gson.fromJson(json, type)
+        return try {
+            val json = prefs.getString(key, null) ?: return emptyList()
+            val type = object:TypeToken<List<Website>>() {}.type
+            gson.fromJson(json,type) ?: emptyList()
+        } catch (e:Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
     }
 }
