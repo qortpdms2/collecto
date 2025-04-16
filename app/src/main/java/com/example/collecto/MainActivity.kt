@@ -4,14 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import com.example.collecto.local.ThemeManager
 import com.example.collecto.local.UrlManager
 import com.example.collecto.local.UserManager
 import com.example.collecto.model.Website
-import com.example.collecto.ui.AuthScreen
-import com.example.collecto.ui.LinkInputDialog
-import com.example.collecto.ui.MainScreen
+import com.example.collecto.ui.*
 import com.example.collecto.ui.theme.CollectoTheme
 
 class MainActivity : ComponentActivity(){
@@ -27,14 +27,20 @@ class MainActivity : ComponentActivity(){
                 val websites = remember { mutableStateListOf<Website>() }
                 var selectedFolder by remember { mutableStateOf("") }
                 var showPopup by remember { mutableStateOf(false) }
+                var currentScreen by remember { mutableStateOf("main") }
+                var showSplash by remember { mutableStateOf(true) }
+                val themeManager = remember { ThemeManager(context) }
 
                 LaunchedEffect(Unit) {
+                    AppCompatDelegate.setDefaultNightMode(
+                        if (themeManager.isDarkMode()) AppCompatDelegate.MODE_NIGHT_YES
+                        else AppCompatDelegate.MODE_NIGHT_NO
+                    )
                     websites.clear()
                     websites.addAll(urlManager.loadUrls())
                 }
 
-
-                if(showPopup) {
+                if (showPopup) {
                     LinkInputDialog(
                         onDismiss = {showPopup=false},
                         onSave = {website ->
@@ -43,28 +49,44 @@ class MainActivity : ComponentActivity(){
                         }
                     )
                 }
-
-                if(loggedIn) {
-                    val folderList = websites.map {it.folder}.distinct()
-
-                    MainScreen(
-                        websites = if(selectedFolder.isBlank()) websites else websites.filter { it.folder==selectedFolder },
-                        folders = folderList,
-                        selectedFolder=selectedFolder,
-                        onSelectFolder = {selectedFolder=it},
-                        onAddLinkClick = {showPopup=true},
-                        onItemClick = {},
-                        onItemDelete = {site->
-                            websites.remove(site)
-                            urlManager.saveUrls(websites)
-                        },
-                        onProfileclick = {
-                            //마이페이지 이동로직 짜면됨;
-                        }
-
-                    )
+                if(showSplash) {
+                    SplashScreen(onSplashFinished = {
+                        showSplash=false
+                    })
                 } else{
-                    AuthScreen(onLoginSuccess = { loggedIn = true })
+                    when {
+                        !loggedIn -> AuthScreen(onLoginSuccess = {
+                            loggedIn=true
+                            currentScreen="main"
+                        })
+                        currentScreen == "main"-> {
+                            val folderList = websites.map { it.folder }.distinct()
+                            MainScreen(
+                                websites=if(selectedFolder.isBlank()) websites else websites.filter { it.folder==selectedFolder },
+                                folders = folderList,
+                                selectedFolder = selectedFolder,
+                                onSelectFolder = {selectedFolder=it},
+                                onAddLinkClick = {showPopup = true},
+                                onItemClick = {},
+                                onItemDelete = {site ->
+                                    websites.remove(site)
+                                    urlManager.saveUrls(websites)
+                                },
+                                onProfileclick = {
+                                    currentScreen="mypage"
+                                }
+                            )
+                        }
+                        currentScreen=="mypage" -> {
+                            MyPageScreen(
+                                onBack = { currentScreen = "main"},
+                                onLogout = {
+                                    userManager.logout()
+                                    loggedIn=false
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
